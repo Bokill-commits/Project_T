@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>주문 목록</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tab {
+      border: 1px solid #ccc; padding: 8px 10px; border-radius: 10px;
+      cursor: pointer; background: #fafafa;
+    }
+    .tab.active { background: #111; color: #fff; border-color: #111; }
+    .meta { color: #666; margin: 8px 0 12px; font-size: 14px; }
+    .err { color: #b00020; margin: 10px 0; white-space: pre-wrap; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #eee; padding: 8px; font-size: 14px; vertical-align: top; }
+    th { text-align: left; background: #fafafa; position: sticky; top: 0; }
+    button {
+      padding: 6px 10px; border-radius: 10px; border: 1px solid #ccc;
+      background: #fff; cursor: pointer;
+    }
+    button.primary { background: #111; color: #fff; border-color: #111; }
+    button.mapbtn { border-color: #3b82f6; color:#1d4ed8; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .toolbar { display:flex; gap:10px; align-items:center; margin: 10px 0 14px; }
+    .toolbar input { padding: 7px 10px; border:1px solid #ccc; border-radius: 10px; min-width: 260px; }
+  </style>
+</head>
+<body>
+  <h2>주문 목록</h2>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="toolbar">
+    <input id="searchBox" placeholder="주문번호로 검색 (예: 26_10)" />
+    <button id="searchBtn">검색</button>
+    <button id="refreshBtn">새로고침</button>
+  </div>
+
+  <div class="meta" id="meta"></div>
+  <div class="err" id="err"></div>
+
+  <div style="overflow:auto; max-height: 70vh; border:1px solid #eee; border-radius: 12px;">
+    <table>
+      <thead>
+        <tr id="thead"></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+<script>
+  const tabsEl = document.getElementById("tabs");
+  const errEl = document.getElementById("err");
+  const metaEl = document.getElementById("meta");
+  const theadEl = document.getElementById("thead");
+  const tbodyEl = document.getElementById("tbody");
+  const searchBox = document.getElementById("searchBox");
+  const searchBtn = document.getElementById("searchBtn");
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  const TAB_LIST = [
+    { key: "", label: "전체" },
+    { key: "대기", label: "대기" },
+    { key: "예약", label: "예약" },
+    { key: "운행중", label: "운행중" },
+    { key: "완료", label: "완료" },
+  ];
+
+  let currentStatus = "";
+  let summaryMap = {};
+  let orderIdCol = null;
+
+  function esc(s) {
+    return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  function setError(msg) { errEl.textContent = msg || ""; }
+
+  function setActiveTab(status) {
+    currentStatus = status;
+    [...tabsEl.querySelectorAll(".tab")].forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.status === status);
+    });
+  }
+
+  function normalizeStatus(v) {
+    return String(v ?? "").replace(/\r|\n|\t/g, "").trim().replace(/ /g, "");
+  }
+
+  async function fetchJSON(url, options) {
+    const res = await fetch(url, options);
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) {
+      const text = await res.text();
+      throw new Error(`JSON 아님(Unexpected token '<' 등). 응답:\n${text.slice(0, 300)}...`);
+    }
+    return await res.json();
+  }
+
+  function buildTabs() {
+    tabsEl.innerHTML = "";
+    TAB_LIST.forEach(t => {
+      const cnt = summaryMap[t.key || "전체"] ?? 0;
+      const btn = document.createElement("button");
+      btn.className = "tab";
+      btn.dataset.status = t.key;
+      btn.textContent = `${t.label} (${cnt})`;
+      btn.onclick = () => { setActiveTab(t.key); loadOrders(t.key); };
+      tabsEl.appendChild(btn);
+    });
+    setActiveTab(currentStatus);
+  }
+
+  async function loadSummary() {
+    const j = await fetchJSON("/api/orders/summary");
+    if (!j.ok) throw new Error(j.error || "summary 실패");
+
+    summaryMap = { "전체": 0, "대기":0, "예약":0, "운행중":0, "완료":0 };
+    j.data.forEach(r => {
+      summaryMap[r.status] = r.cnt;
+      summaryMap["전체"] += r.cnt;
+    });
+    buildTabs();
+  }
+
+  async function transition(orderId, action) {
+    try {
+      setError("");
+      const j = await fetchJSON("/api/orders/transition", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: orderId, action })
+      });
+      if (!j.ok) throw new Error(j.error || "transition 실패");
+
+      await loadSummary();
+      await loadOrders(currentStatus);
+
+    } catch (e) {
+      setError(String(e?.message || e));
+    }
+  }
+  window.transition = transition;
+
+  // ✅ 지도 생성 후 새 탭으로 열기
+  async function openMap(orderId) {
+    try {
+      setError("");
+      const j = await fetchJSON("/api/orders/map", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: orderId })
+      });
+      if (!j.ok) throw new Error(j.error || "map 생성 실패");
+
+      const url = j.data.url;
+      window.open(url, "_blank");
+
+    } catch (e) {
+      setError(String(e?.message || e));
+    }
+  }
+  window.openMap = openMap;
+
+  function actionButtonsForRow(row) {
+    const st = normalizeStatus(row["비고"]);
+    const orderId = row[orderIdCol] ?? row["주문번호"] ?? row["order_id"];
+    if (!orderId) return "";
+
+    const mapBtn = `<button class="mapbtn" onclick="openMap('${esc(orderId)}')">🗺 지도</button>`;
+
+    if (currentStatus === "대기") {
+      return `<button class="primary" onclick="transition('${esc(orderId)}','accept')">수락</button>${mapBtn}`;
+    }
+    if (currentStatus === "예약") {
+      return `<button class="primary" onclick="transition('${esc(orderId)}','start')">운행</button>${mapBtn}`;
+    }
+    if (currentStatus === "운행중") {
+      return `<button class="primary" onclick="transition('${esc(orderId)}','done')">완료</button>${mapBtn}`;
+    }
+    if (currentStatus === "완료") {
+      return `${mapBtn}`;
+    }
+
+    if (st === "대기") return `<button class="primary" onclick="transition('${esc(orderId)}','accept')">수락</button>${mapBtn}`;
+    if (st === "예약") return `<button class="primary" onclick="transition('${esc(orderId)}','start')">운행</button>${mapBtn}`;
+    if (st === "운행중") return `<button class="primary" onclick="transition('${esc(orderId)}','done')">완료</button>${mapBtn}`;
+    return `${mapBtn}`;
+  }
+
+  function buildTable(rows) {
+    tbodyEl.innerHTML = "";
+    theadEl.innerHTML = "";
+
+    if (!rows || rows.length === 0) {
+      theadEl.innerHTML = `<th>결과</th>`;
+      tbodyEl.innerHTML = `<tr><td>데이터가 없습니다.</td></tr>`;
+      return;
+    }
+
+    const keys = Object.keys(rows[0]);
+    const preferred = [];
+    if (orderIdCol && keys.includes(orderIdCol)) preferred.push(orderIdCol);
+    ["주문번호","order_id"].forEach(k => { if (keys.includes(k) && !preferred.includes(k)) preferred.push(k); });
+    ["비고","차종","출발지주소","도착지주소","탁송금액","출발시간"].forEach(k => { if (keys.includes(k) && !preferred.includes(k)) preferred.push(k); });
+
+    const rest = keys.filter(k => !preferred.includes(k));
+    const cols = [...preferred, ...rest];
+
+    theadEl.innerHTML = cols.map(k => `<th>${esc(k)}</th>`).join("") + `<th>액션</th>`;
+
+    rows.forEach(row => {
+      const tds = cols.map(k => `<td>${esc(row[k])}</td>`).join("");
+      const actions = actionButtonsForRow(row);
+      tbodyEl.insertAdjacentHTML("beforeend", `<tr>${tds}<td><div class="row-actions">${actions}</div></td></tr>`);
+    });
+  }
+
+  async function loadOrders(status) {
+    setError("");
+    metaEl.textContent = "불러오는 중...";
+    tbodyEl.innerHTML = "";
+    theadEl.innerHTML = "";
+
+    try {
+      let url = "/api/orders?limit=50&offset=0";
+      if (status) url += `&status=${encodeURIComponent(status)}`;
+
+      const j = await fetchJSON(url);
+      if (!j.ok) throw new Error(j.error || "orders 실패");
+
+      orderIdCol = j.meta?.order_id_col || orderIdCol;
+      if (!orderIdCol) throw new Error("주문번호 컬럼을 서버에서 감지하지 못했습니다.");
+
+      metaEl.textContent = `상태: ${status || "전체"} / 주문번호 컬럼: ${orderIdCol} / rows: ${j.data.length}`;
+      buildTable(j.data);
+
+    } catch (e) {
+      metaEl.textContent = "";
+      setError(String(e?.message || e));
+    }
+  }
+
+  async function searchByOrderId() {
+    const q = searchBox.value.trim();
+    if (!q) return;
+
+    await loadOrders("");
+    const rows = [...tbodyEl.querySelectorAll("tr")];
+    rows.forEach(tr => {
+      const txt = tr.textContent || "";
+      tr.style.display = txt.includes(q) ? "" : "none";
+    });
+    metaEl.textContent += ` / 검색: ${q}`;
+  }
+
+  searchBtn.onclick = searchByOrderId;
+  refreshBtn.onclick = async () => { await loadSummary(); await loadOrders(currentStatus); };
+  searchBox.addEventListener("keydown", (e) => { if (e.key === "Enter") searchByOrderId(); });
+
+  (async function init() {
+    try {
+      await loadSummary();
+      setActiveTab("대기");
+      await loadOrders("대기");
+    } catch (e) {
+      setError(String(e?.message || e));
+    }
+  })();
+</script>
+</body>
+</html>

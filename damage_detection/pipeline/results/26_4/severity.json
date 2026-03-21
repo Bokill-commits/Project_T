@@ -1,0 +1,15 @@
+{
+  "index": "26_4",
+  "severity": 2,
+  "raw_score": 1.8886849880218506,
+  "diff_mean": 0.008672843997677168,
+  "views_used": [
+    "front",
+    "rear",
+    "left",
+    "right",
+    "left_side",
+    "right_side"
+  ],
+  "missing_views": []
+}

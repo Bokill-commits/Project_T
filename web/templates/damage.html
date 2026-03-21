@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>이미지 보기</title>
+  <style>
+    .row { display: flex; gap: 16px; align-items: flex-start; }
+    .card { border: 1px solid #ddd; padding: 12px; border-radius: 8px; width: 50%; }
+    img { width: 100%; height: auto; display: block; border-radius: 6px; }
+    pre { background: #f7f7f7; padding: 10px; border-radius: 6px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h2>손상 분석 결과</h2>
+
+  <div class="row">
+    <div class="card">
+      <h3>결과 이미지 1</h3>
+      <img src="{{ url_for('static', filename='images/26_2_severity.png') }}" alt="severity" />
+    </div>
+
+    <div class="card">
+      <h3>비교 이미지 1</h3>
+      <img src="{{ url_for('static', filename='images/after_left_pair.jpg') }}" alt="pair" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h3>결과 이미지 2</h3>
+      <img src="{{ url_for('static', filename='images/26_3_severity.png') }}" alt="severity" />
+    </div>
+
+    <div class="card">
+      <h3>비교 이미지 2</h3>
+      <img src="{{ url_for('static', filename='images/after_right_pair.jpg') }}" alt="pair" />
+    </div>
+  </div>
+</body>
+</html>

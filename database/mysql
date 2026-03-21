@@ -1,0 +1,27 @@
+SHOW VARIABLES LIKE 'local_infile';
+SET GLOBAL local_infile = 1;
+SHOW VARIABLES LIKE 'local_infile';
+
+CREATE TABLE `delivery_orders_2026` (
+  `인덱스` VARCHAR(20) NOT NULL,
+  `차종` VARCHAR(50),
+  `출발지주소` VARCHAR(255),
+  `도착지주소` VARCHAR(255),
+  `출발지연락처` VARCHAR(30),
+  `도착지연락처` VARCHAR(30),
+  `출발시간` DATETIME,
+  `탁송금액` INT,
+  `특이사항` VARCHAR(255),
+  `비고` VARCHAR(50),
+  PRIMARY KEY (`인덱스`)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+
+
+USE project;
+LOAD DATA LOCAL INFILE 'C:/Users/test/Desktop/delivery_orders_2026_utf8.csv'
+INTO TABLE delivery_orders_2026
+CHARACTER SET utf8mb4
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
