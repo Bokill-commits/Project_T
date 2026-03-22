@@ -52,6 +52,7 @@ AI와 데이터 기반으로 **탁송 차량과 대리기사를 최적으로 매
 ### Core
 * TensorFlow
 * scikit-learn
+* Pandas
 * NumPy
 
 ### Visualization
