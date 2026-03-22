@@ -89,25 +89,25 @@ AI와 데이터 기반으로 **탁송 차량과 대리기사를 최적으로 매
 ## 📁 프로젝트 구조
 ```
 Project_T/
-├── damage_detection/
+├── damage_detection/            # 차량 손상 여부 판단 시스템
 │   ├── car/
 │   ├── checkpoints/
 │   ├── pipeline/
 │   ├── result/
 │   └── uploads/
-├── driver_matching_system/
+├── driver_matching_system/      # 기사 매칭 / 경로 추천 시스템
 │   ├── delivery_orders_2026.csv
 │   ├── delivery_orders_2026_utf8.csv
 │   └── driver_matching_system.ipynb
-├── review_sentiment_system/
+├── review_sentiment_system/     # 리뷰 감정 분석 시스템
 │   ├── drivers_2026.xlsx
 │   ├── review_label.csv
 │   └── review_sentiment_system.ipynb
-├── database/
+├── database/                    # 데이터베이스
 │   ├── mysql
 │   └── mysql-installer-web-community-8.0.44.0.msi
 │
-└── web/
+└── web/                         # 웹 구동
 ```
 
 ---
