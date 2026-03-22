@@ -45,18 +45,21 @@ AI와 데이터 기반으로 **탁송 차량과 대리기사를 최적으로 매
 * Python
 
 ### Tools
-* vscode
+* VScode
 * Jupyter Notebook
 * Anaconda Prompt
 
 ### Core
-* TensorFlow
-* scikit-learn
 * Pandas
 * NumPy
+* TensorFlow
+* Scikit-learn
+* Konlpy
+* Okt
 
 ### Visualization
 * Matplotlib
+* Folium
 
 ---
 
@@ -86,20 +89,25 @@ AI와 데이터 기반으로 **탁송 차량과 대리기사를 최적으로 매
 ## 📁 프로젝트 구조
 ```
 Project_T/
-├── train.ipynb          # 키포인트 추출 + 데이터 증강 + 모델 학습
-├── inference.py         # 추론 및 영상 분석
-├── finetune.ipynb       # 파인튜닝
-├── video/               # 학습용 영상
-├── pose_fps/            # 추출된 키포인트 데이터
-│   ├── data_pose.npy
-│   ├── labels_pose.npy
-│   ├── video_ids.npy
-│   ├── aug_data.npy
-│   ├── aug_labels.npy
-│   └── aug_video_ids.npy
-└── model/               # 학습모델
-    ├── action_model.h5
-    └── label_encoder.pkl
+├── damage_detection/
+│   ├── car/
+│   ├── checkpoints/
+│   ├── pipeline/
+│   ├── result/
+│   └── uploads/
+├── driver_matching_system/
+│   ├── delivery_orders_2026.csv
+│   ├── delivery_orders_2026_utf8.csv
+│   └── driver_matching_system.ipynb
+├── review_sentiment_system/
+│   ├── drivers_2026.xlsx
+│   ├── review_label.csv
+│   └── review_sentiment_system.ipynb
+├── database/
+│   ├── mysql
+│   └── mysql-installer-web-community-8.0.44.0.msi
+│
+└── web/
 ```
 
 ---
