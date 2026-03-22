@@ -35,19 +35,27 @@ AI와 데이터 기반으로 **탁송 차량과 대리기사를 최적으로 매
 | 📊 기사 신뢰도 평가 | 운행 이력 기반 점수 산출     |
 | 🌐 웹 서비스     | 통합 플랫폼 제공          |
 
-저는 **AI 자동 매칭 로직과 경로 추천 / 리뷰 감정 분석 기능 구현**을 담당하였습니다.
+저는 **AI 자동 매칭과 경로 추천 / 리뷰 감정 분석 기능 구현**을 담당하였습니다.
 
 ---
 
 ## 🛠️ 기술 스택
 
-| 분야     | 기술                          |
-| -------- | ----------------------------- |
-| Backend  | Python                        |
-| AI       | PyTorch, NLP, Computer Vision |
-| Frontend | Web (HTML/CSS/JS)             |
-| Database | MySQL / SQLite                |
-| Server   | Local Server                  |
+### Language
+* Python
+
+### Tools
+* vscode
+* Jupyter Notebook
+* Anaconda Prompt
+
+### Core
+* TensorFlow
+* scikit-learn
+* NumPy
+
+### Visualization
+* Matplotlib
 
 ---
 
@@ -80,7 +88,7 @@ AI와 데이터 기반으로 **탁송 차량과 대리기사를 최적으로 매
 
 ## 📁 프로젝트 구조
 ```
-Project_H/
+Project_T/
 ├── train.ipynb          # 키포인트 추출 + 데이터 증강 + 모델 학습
 ├── inference.py         # 추론 및 영상 분석
 ├── finetune.ipynb       # 파인튜닝
